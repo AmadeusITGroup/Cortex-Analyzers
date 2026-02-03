@@ -179,25 +179,35 @@ jobs:
         include:
           - account: 1
             role_secret: AWS_ROLE_ARN_1
+            bucket_secret: AWS_S3_CATALOG_BUCKET_1
+            bucket_legacy_secret: AWS_S3_CATALOG_BUCKET_LEGACY_1
           - account: 2
             role_secret: AWS_ROLE_ARN_2
+            bucket_secret: AWS_S3_CATALOG_BUCKET_2
+            bucket_legacy_secret: AWS_S3_CATALOG_BUCKET_LEGACY_2
           - account: 3
             role_secret: AWS_ROLE_ARN_3
+            bucket_secret: AWS_S3_CATALOG_BUCKET_3
+            bucket_legacy_secret: AWS_S3_CATALOG_BUCKET_LEGACY_3
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      S3_BUCKET_PRIMARY: ${{ secrets.AWS_S3_CATALOG_BUCKET }}
-      S3_BUCKET_LEGACY: ${{ secrets.AWS_S3_CATALOG_BUCKET_LEGACY }}
+      S3_BUCKET_PRIMARY: ${{ secrets[matrix.bucket_secret] }}
+      S3_BUCKET_LEGACY: ${{ secrets[matrix.bucket_legacy_secret] }}
     steps:
       - name: Check if account is configured
         id: check
         env:
           ROLE_ARN: ${{ secrets[matrix.role_secret] }}
+          BUCKET_PRIMARY: ${{ secrets[matrix.bucket_secret] }}
+          BUCKET_LEGACY: ${{ secrets[matrix.bucket_legacy_secret] }}
         run: |
           if [ -z "$ROLE_ARN" ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "Account ${{ matrix.account }} not configured, skipping"
           else
             echo "::add-mask::$ROLE_ARN"
+            [ -n "$BUCKET_PRIMARY" ] && echo "::add-mask::$BUCKET_PRIMARY"
+            [ -n "$BUCKET_LEGACY" ] && echo "::add-mask::$BUCKET_LEGACY"
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "role_arn=$ROLE_ARN" >> $GITHUB_OUTPUT
           fi
@@ -207,7 +217,7 @@ jobs:
         run: |
           missing=""
           [ -z "${{ env.AWS_REGION }}" ] && missing="$missing AWS_REGION"
-          [ -z "${{ env.S3_BUCKET_PRIMARY }}" ] && missing="$missing AWS_S3_CATALOG_BUCKET"
+          [ -z "${{ env.S3_BUCKET_PRIMARY }}" ] && missing="$missing ${{ matrix.bucket_secret }}"
           if [ -n "$missing" ]; then
             echo "::error::Missing required secrets:$missing"
             exit 1
@@ -230,22 +240,22 @@ jobs:
         if: steps.check.outputs.skip == 'false' && github.ref == 'refs/heads/develop'
         run: |
           set -euo pipefail
-          aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers-devel.json" --no-progress --content-type "application/json"
-          aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders-devel.json" --no-progress --content-type "application/json"
+          aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers-devel.json" --only-show-errors --content-type "application/json"
+          aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders-devel.json" --only-show-errors --content-type "application/json"
           if [ -n "${S3_BUCKET_LEGACY}" ]; then
-            aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_LEGACY}/analyzers-devel.json" --no-progress --content-type "application/json"
-            aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_LEGACY}/responders-devel.json" --no-progress --content-type "application/json"
+            aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_LEGACY}/analyzers-devel.json" --only-show-errors --content-type "application/json"
+            aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_LEGACY}/responders-devel.json" --only-show-errors --content-type "application/json"
           fi
 
       - name: Upload production catalogs to S3
         if: steps.check.outputs.skip == 'false' && startsWith(github.ref, 'refs/tags/')
         run: |
           set -euo pipefail
-          aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers.json" --no-progress --content-type "application/json"
-          aws s3 cp responders/responders.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders.json" --no-progress --content-type "application/json"
-          aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_PRIMARY}/latest/zip/report-templates.zip" --no-progress --content-type "application/zip"
+          aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers.json" --only-show-errors --content-type "application/json"
+          aws s3 cp responders/responders.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders.json" --only-show-errors --content-type "application/json"
+          aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_PRIMARY}/latest/zip/report-templates.zip" --only-show-errors --content-type "application/zip"
           if [ -n "${S3_BUCKET_LEGACY}" ]; then
-            aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_LEGACY}/analyzers.json" --no-progress --content-type "application/json"
-            aws s3 cp responders/responders.json "s3://${S3_BUCKET_LEGACY}/responders.json" --no-progress --content-type "application/json"
-            aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_LEGACY}/report-templates.zip" --no-progress --content-type "application/zip"
+            aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_LEGACY}/analyzers.json" --only-show-errors --content-type "application/json"
+            aws s3 cp responders/responders.json "s3://${S3_BUCKET_LEGACY}/responders.json" --only-show-errors --content-type "application/json"
+            aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_LEGACY}/report-templates.zip" --only-show-errors --content-type "application/zip"
           fi
