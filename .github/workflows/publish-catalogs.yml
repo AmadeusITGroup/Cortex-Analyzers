@@ -240,22 +240,22 @@ jobs:
         if: steps.check.outputs.skip == 'false' && github.ref == 'refs/heads/develop'
         run: |
           set -euo pipefail
-          aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers-devel.json" --only-show-errors --content-type "application/json"
-          aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders-devel.json" --only-show-errors --content-type "application/json"
+          aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers-devel.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
+          aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders-devel.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
           if [ -n "${S3_BUCKET_LEGACY}" ]; then
-            aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_LEGACY}/analyzers-devel.json" --only-show-errors --content-type "application/json"
-            aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_LEGACY}/responders-devel.json" --only-show-errors --content-type "application/json"
+            aws s3 cp analyzers/analyzers-devel.json "s3://${S3_BUCKET_LEGACY}/analyzers-devel.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
+            aws s3 cp responders/responders-devel.json "s3://${S3_BUCKET_LEGACY}/responders-devel.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
           fi
 
       - name: Upload production catalogs to S3
         if: steps.check.outputs.skip == 'false' && startsWith(github.ref, 'refs/tags/')
         run: |
           set -euo pipefail
-          aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers.json" --only-show-errors --content-type "application/json"
-          aws s3 cp responders/responders.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders.json" --only-show-errors --content-type "application/json"
-          aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_PRIMARY}/latest/zip/report-templates.zip" --only-show-errors --content-type "application/zip"
+          aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_PRIMARY}/latest/json/analyzers.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
+          aws s3 cp responders/responders.json "s3://${S3_BUCKET_PRIMARY}/latest/json/responders.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
+          aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_PRIMARY}/latest/zip/report-templates.zip" --only-show-errors --content-type "application/zip" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
           if [ -n "${S3_BUCKET_LEGACY}" ]; then
-            aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_LEGACY}/analyzers.json" --only-show-errors --content-type "application/json"
-            aws s3 cp responders/responders.json "s3://${S3_BUCKET_LEGACY}/responders.json" --only-show-errors --content-type "application/json"
-            aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_LEGACY}/report-templates.zip" --only-show-errors --content-type "application/zip"
+            aws s3 cp analyzers/analyzers.json "s3://${S3_BUCKET_LEGACY}/analyzers.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
+            aws s3 cp responders/responders.json "s3://${S3_BUCKET_LEGACY}/responders.json" --only-show-errors --content-type "application/json" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
+            aws s3 cp analyzers/report-templates.zip "s3://${S3_BUCKET_LEGACY}/report-templates.zip" --only-show-errors --content-type "application/zip" 2>&1 | sed 's/arn:aws:[^"]*/"***"/g' || exit 1
           fi
