@@ -203,9 +203,9 @@ class ElasticsearchAnalyzer(Analyzer):
                     #remove all url and domain fields if not a url or domain or fqdn
                     if self.data_type != 'domain' and self.data_type != 'url' and self.data_type != 'fqdn':
                         self.fields = list(filter( lambda s: s not in DOMAIN+URL, self.fields))
-                    if self.data_type != 'domain':
+                    if self.data_type not in ['domain', 'fqdn']:
                         self.fields = list(filter( lambda s: s not in DOMAIN, self.fields))
-                    if self.data_type != "url":
+                    if self.data_type not in ['url', 'fqdn']:
                         self.fields = list(filter( lambda s: s not in URL, self.fields))
                     if self.data_type != 'mail':
                         self.fields = list(filter( lambda s: not ("mail" in s) and (s not in MAIL), self.fields))
