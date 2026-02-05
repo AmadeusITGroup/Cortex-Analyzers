@@ -4,7 +4,7 @@
   "author": "Vito Piserchia",
   "url": "https://github.com/TheHive-Project/Cortex-Analyzers",
   "license": "AGPL-V3",
-  "description": "Push IOC to Defender client. Warn mode (Microsoft Defender for Cloud only",
+  "description": "Push IOC to Defender client. Warn mode (Microsoft Defender for Cloud only)",
   "dataTypeList": ["thehive:case_artifact"],
   "command": "MSDefenderEndpoints/MSDefenderEndpoints.py",
   "baseConfig": "MSDefenderforEndpoints",
@@ -38,7 +38,7 @@
     },
     {
       "name": "resourceAppIdUri",
-      "description": "Security Center URI, usually doens't need to change",
+      "description": "Security Center URI, usually doesn't need to change",
       "type": "string",
       "multi": false,
       "required": true,
