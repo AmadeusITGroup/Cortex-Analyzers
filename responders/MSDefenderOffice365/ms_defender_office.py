@@ -245,7 +245,7 @@ class MsDefenderOffice365Responder(Responder):
                     )
             elif item.get('stdout') and 'Invalid value to add' in item.get('stdout'):
                 error_entries.append(
-                        f"{item['entry']}: {item['stdiout']}"
+                        f"{item['entry']}: {item['stdout']}"
                     )
             elif item.get('result'):
                 success_dict = json.loads(item['result'])
