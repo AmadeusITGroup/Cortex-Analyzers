@@ -503,8 +503,8 @@ class MSEntraID(Analyzer):
                 safe_upn = self.user.replace("'", "''")
 
                 filter_q = (
-                    f"(userPrincipalName eq '{safe_upn}')"
-#                    f"or userId eq '{self.guid}')"
+                    f"(userPrincipalName eq '{safe_upn}' "
+                    f"or userId eq '{self.guid}')"
                 )
             else:  # hostname
                 safe_name = query_value.replace("'", "''")
