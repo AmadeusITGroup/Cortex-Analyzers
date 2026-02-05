@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.7.5](https://github.com/TheHive-Project/Cortex-Analyzers/tree/3.7.5) (2026-01-26)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex-Analyzers/compare/3.7.4...3.7.5)
+
+**Merged pull requests:**
+
+- CSFalcon TI Analyzer - Fix query for hashes [\#1420](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1420) ([nusantara-self](https://github.com/nusantara-self))
+
 ## [3.7.4](https://github.com/TheHive-Project/Cortex-Analyzers/tree/3.7.4) (2026-01-22)
 
 [Full Changelog](https://github.com/TheHive-Project/Cortex-Analyzers/compare/3.7.3...3.7.4)
@@ -507,7 +515,7 @@
 
 - Capa Analyzer - auto-download latest capa binary [\#1301](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1301) ([nusantara-self](https://github.com/nusantara-self))
 - Domaintools dependency issues [\#1300](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1300) ([nusantara-self](https://github.com/nusantara-self))
-- Fix anyrun\_analyzer.py for submit file [\#1299](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1299) ([threathunterr](https://github.com/threathunterr))
+- Fix anyrun\_analyzer.py for submit file [\#1299](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1299) ([ralph-loop](https://github.com/ralph-loop))
 - add proxies to phishtank\_checkurl.py [\#1298](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1298) ([Labuiga](https://github.com/Labuiga))
 
 ## [3.4.0](https://github.com/TheHive-Project/Cortex-Analyzers/tree/3.4.0) (2024-12-09)
