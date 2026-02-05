@@ -19,7 +19,8 @@ URL_DOMAIN_ACTIONS = [
   'pushIOCAllowed',
   'pushIOCAudit',
   'pushIOCWarn',
-  'pushIOCBlock'
+  'pushIOCBlock',
+  'pushIOCAlert'  # Deprecated: maps to Audit internally
 ]
 
 ACTIONS = {
