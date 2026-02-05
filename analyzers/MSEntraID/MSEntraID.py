@@ -560,8 +560,8 @@ class MSEntraID(Analyzer):
             self.error({"message": "Unidentified service"})
 
     def operations(self, raw):
-        if not raw:
-            return [self.build_operation("AddTagToArtifact", tag="MSEntraID:GUID:Not Found")]
+        if raw.get('message') and 'No user matches' in str(raw.get('message', '')):
+            return [self.build_operation("AddTagToArtifact", tag="MSEntraID:GUID:NotFound")]
 
     def summary(self, raw):
         taxonomies = []
