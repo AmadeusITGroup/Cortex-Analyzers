@@ -28,6 +28,7 @@ class MSEntraID(Analyzer):
         self.country = self.get_param('config.country', None)
         self.service = self.get_param('config.service', None)
         self.params_list = self.get_param('config.params_list', [])
+        self.extended_search = self.get_param('config.extended_search', True)
 
     def authenticate(self):
         token_data = {
@@ -46,19 +47,23 @@ class MSEntraID(Analyzer):
         return token_r.json().get('access_token')
 
 
-    def resolve_user_guid(self, upn_or_mail: str, headers: dict, base_url: str) -> str:
+    def resolve_user_guid(self, identifier: str, headers: dict, base_url: str, extended_search: bool = False) -> str:
         """
-        Robustly turn a UPN or mail address into the user objectId (GUID).
+        Robustly turn a user identifier into the user objectId (GUID).
         Works for cloud users, B2B guests, aliases, vanity domains…
         """
-        if GUID_RE.match(upn_or_mail):
-            return upn_or_mail                    # already a GUID
+        if GUID_RE.match(identifier):
+            return identifier                    # already a GUID
 
-        # Escape single quotes inside the address (rare)
-        quoted = upn_or_mail.replace("'", "''")
+        # Escape single quotes inside the identifier (rare)
+        quoted = identifier.replace("'", "''")
 
         filter_q = (f"(userPrincipalName eq '{quoted}') "
                     f"or (mail eq '{quoted}')")
+
+        if extended_search:
+            filter_q += (f" or (onPremisesSamAccountName eq '{quoted}') "
+                         f"or (employeeId eq '{quoted}')")
 
         resp = requests.get(
             f"{base_url}users",
@@ -74,10 +79,10 @@ class MSEntraID(Analyzer):
 
         return users[0]["id"]
 
-    def ensure_user_guid(self, base_url, headers):
+    def ensure_user_guid(self, base_url, headers, extended_search: bool = False):
         if GUID_RE.match(self.user):
             return self.user
-        return self.resolve_user_guid(self.user, headers, base_url)
+        return self.resolve_user_guid(self.user, headers, base_url, extended_search=extended_search)
 
 
     def handle_get_signins(self, headers, base_url):
@@ -214,15 +219,17 @@ class MSEntraID(Analyzer):
 
     def handle_get_userinfo(self, headers, base_url):
         """Fetch comprehensive user information from Microsoft Entra ID, including manager, license details, and group memberships."""
-        if self.data_type != 'mail':
-            self.error('Incorrect dataType. "mail" expected.')
+        if self.data_type not in ['mail', 'other', 'user', 'username']:
+            self.error('Incorrect dataType. "mail", "other", "user" or "username" expected.')
 
         try:
             self.user = self.get_data()
             if not self.user:
                 self.error("No user supplied")
             
-            self.guid = self.ensure_user_guid(base_url, headers)
+            # Force extend search for non-mail datatypes
+            use_extended = self.extended_search or self.data_type in ['other', 'user', 'username']
+            self.guid = self.ensure_user_guid(base_url, headers, extended_search=use_extended)
             # Use select to retrieve many user attributes. Adjust as needed.
             params = {
                         "$select": ",".join(self.params_list)
