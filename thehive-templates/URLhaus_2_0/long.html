@@ -1,10 +1,10 @@
-<div class="panel panel-info" ng-if="success && content.query_status === 'ok'">
+<div class="panel panel-warning" ng-if="success && content.query_status === 'ok'">
     <div class="panel-heading">
         URLhaus search results for
         <strong>{{artifact.data | fang}}</strong>
     </div>
     <div class="panel-body">
-        <div ng-if="content.query_status === 'ok' && content.data_type === 'url'">
+        <div ng-if="content.data_type === 'url'">
             <dl class="dl-horizontal">
                 <dt>ID</dt>
                 <dd class="wrap">{{content.id}}</dd>
@@ -69,7 +69,7 @@
                 </dd>
             </dl>
         </div>
-        <div ng-if="content.query_status === 'ok' && (content.data_type === 'domain' || content.data_type === 'ip')">
+        <div ng-if="content.data_type === 'domain' || content.data_type === 'ip' || content.data_type === 'fqdn'">
             <dl class="dl-horizontal">
                 <dt>URLhaus reference</dt>
                 <dd class="wrap"><a href="{{content.urlhaus_reference}}" target="_blank">Open URLhaus entry
@@ -120,7 +120,7 @@
                 </dd>
             </dl>
         </div>
-        <div ng-if="content.query_status === 'ok' && content.data_type === 'hash'">
+        <div ng-if="content.data_type === 'hash'">
             <dl class="dl-horizontal">
                 <dt>Hashes</dt>
                 <dd class="wrap">md5: {{content.md5_hash}}<br />sha256: {{content.sha256_hash}}</dd>
@@ -168,16 +168,16 @@
 </div>
 
 <!-- No results -->
-<div class="panel panel-danger" ng-if="content.query_status !== 'ok'">
+<div class="panel panel-info" ng-if="success && content.query_status === 'no_results'">
     <div class="panel-heading">
-        <strong>{{artifact.data | fang}}</strong>
+        URLhaus search for <strong>{{artifact.data | fang}}</strong>
     </div>
     <div class="panel-body">
         <dl class="dl-horizontal">
             <dt>
-                <i class="fa fa-warning"></i> URLhaus:
+                <i class="fa fa-info-circle"></i> Result:
             </dt>
-            <dd class="wrap">No results</dd>
+            <dd class="wrap">No results found in URLhaus database.</dd>
         </dl>
     </div>
 </div>
@@ -185,13 +185,11 @@
 <!-- General error  -->
 <div class="panel panel-danger" ng-if="!success">
     <div class="panel-heading">
-        <strong>{{artifact.data | fang}}</strong>
+        <i class="fa fa-warning"></i> URLhaus error for <strong>{{artifact.data | fang}}</strong>
     </div>
     <div class="panel-body">
         <dl class="dl-horizontal" ng-if="content.errorMessage">
-            <dt>
-                <i class="fa fa-warning"></i> URLhaus:
-            </dt>
+            <dt>Error:</dt>
             <dd class="wrap">{{content.errorMessage}}</dd>
         </dl>
     </div>

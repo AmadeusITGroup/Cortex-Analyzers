@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import requests
 from cortexutils.analyzer import Analyzer
 from URLhaus_client import URLhausClient
 
@@ -13,18 +14,21 @@ class URLhausAnalyzer(Analyzer):
         if not data:
             self.error('No observable or file given.')
 
-        results = {}
-        if self.data_type == 'url':
-            results = URLhausClient.search_url(data, self.api_key)
-        elif self.data_type in ['domain', 'fqdn', 'ip']:
-            results = URLhausClient.search_host(data, self.api_key)
-        elif self.data_type == 'hash':
-            if len(data) in [32, 64]:
-                results = URLhausClient.search_payload(data, self.api_key)
+        try:
+            results = {}
+            if self.data_type == 'url':
+                results = URLhausClient.search_url(data, self.api_key)
+            elif self.data_type in ['domain', 'fqdn', 'ip']:
+                results = URLhausClient.search_host(data, self.api_key)
+            elif self.data_type == 'hash':
+                if len(data) in [32, 64]:
+                    results = URLhausClient.search_payload(data, self.api_key)
+                else:
+                    self.error('Only sha256 and md5 supported by URLhaus.')
             else:
-                self.error('Only sha256 and md5 supported by URLhaus.')
-        else:
-            self.error('Datatype not supported.')
+                self.error('Datatype not supported.')
+        except (ValueError, RuntimeError, requests.RequestException) as e:
+            self.error(str(e))
 
         results.update({
             'data_type': self.data_type

@@ -8,15 +8,36 @@ class URLhausClient(object):
     @staticmethod
     def __request(endpoint, key, value, api) -> dict:
         headers = {"Auth-Key": api}
-        results = requests.post(
+        response = requests.post(
             BASEURL + endpoint + '/',
             {key: value}, headers=headers
-        ).json()
+        )
 
-        if results['query_status'] in ['ok', 'no_results']:
+        if response.status_code != 200:
+            raise RuntimeError(
+                'URLhaus API returned HTTP {}: {}'.format(
+                    response.status_code, response.text[:500]
+                )
+            )
+
+        try:
+            results = response.json()
+        except ValueError:
+            raise RuntimeError(
+                'URLhaus API returned non-JSON response: {}'.format(
+                    response.text[:500]
+                )
+            )
+
+        query_status = results.get('query_status')
+        if query_status in ['ok', 'no_results']:
             return results
         else:
-            raise ValueError('Given value seems not to be valuid: <{}: {}>.'.format(key, value))
+            raise ValueError(
+                'URLhaus query failed (query_status={}): <{}: {}>.'.format(
+                    query_status, key, value
+                )
+            )
 
     @staticmethod
     def search_url(url: str, api: str) -> dict:
