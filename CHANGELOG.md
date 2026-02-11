@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.7.6](https://github.com/TheHive-Project/Cortex-Analyzers/tree/3.7.6) (2026-02-05)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex-Analyzers/compare/3.7.5...3.7.6)
+
+**Merged pull requests:**
+
+- CI - Publish Catalogs automatically [\#1422](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1422) ([nusantara-self](https://github.com/nusantara-self))
+- New Analyzer & Update Responders Watcher [\#1421](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1421) ([ygalnezri](https://github.com/ygalnezri))
+- MS Defender Office365 update [\#1418](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1418) ([vpiserchia](https://github.com/vpiserchia))
+- Update Elasticsearch Analyzer: [\#1419](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1419) ([vpiserchia](https://github.com/vpiserchia))
+- Update MSEntraID analyzers [\#1417](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1417) ([vpiserchia](https://github.com/vpiserchia))
+- Update MS Defender Responders [\#1416](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1416) ([vpiserchia](https://github.com/vpiserchia))
+- Add tag to artifacts depending on service [\#1414](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1414) ([vpiserchia](https://github.com/vpiserchia))
+
 ## [3.7.5](https://github.com/TheHive-Project/Cortex-Analyzers/tree/3.7.5) (2026-01-26)
 
 [Full Changelog](https://github.com/TheHive-Project/Cortex-Analyzers/compare/3.7.4...3.7.5)
@@ -970,7 +984,7 @@
 - CIRCL Hashlookup Analyzer [\#1015](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1015) ([nsmfoo](https://github.com/nsmfoo))
 - \[OSCD Sprint \#2\] Final Pull Request / Summary [\#991](https://github.com/TheHive-Project/Cortex-Analyzers/pull/991) ([staf711](https://github.com/staf711))
 - Update fileinfo\_analyzer.py [\#985](https://github.com/TheHive-Project/Cortex-Analyzers/pull/985) ([v1p3r0u5](https://github.com/v1p3r0u5))
-- Update Cyberprotect Analyzer [\#974](https://github.com/TheHive-Project/Cortex-Analyzers/pull/974) ([ArthurCauchy](https://github.com/ArthurCauchy))
+- Update Cyberprotect Analyzer [\#974](https://github.com/TheHive-Project/Cortex-Analyzers/pull/974) ([TurdusMerulaMerula](https://github.com/TurdusMerulaMerula))
 - Update GreyNoise Analyzer [\#970](https://github.com/TheHive-Project/Cortex-Analyzers/pull/970) ([bradchiappetta](https://github.com/bradchiappetta))
 - \[FR\] Diario Analyzer [\#967](https://github.com/TheHive-Project/Cortex-Analyzers/pull/967) ([nachorpaez](https://github.com/nachorpaez))
 - \[OSCD Initiative\] Develop Responder for Duo Security; fix \#857 [\#964](https://github.com/TheHive-Project/Cortex-Analyzers/pull/964) ([yugoslavskiy](https://github.com/yugoslavskiy))
