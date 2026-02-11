@@ -65,17 +65,24 @@ class MSEntraID(Analyzer):
             filter_q += (f" or (onPremisesSamAccountName eq '{quoted}') "
                          f"or (employeeId eq '{quoted}')")
 
+        req_headers = headers.copy()
+        req_params = {"$filter": filter_q, "$select": "id"}
+
+        if extended_search:
+            req_headers["ConsistencyLevel"] = "eventual"
+            req_params["$count"] = "true"
+
         resp = requests.get(
             f"{base_url}users",
-            headers=headers,
-            params={"$filter": filter_q, "$select": "id"}
+            headers=req_headers,
+            params=req_params,
         )
         if resp.status_code != 200:
             self.error(f"[GUID‑lookup] HTTP {resp.status_code}: {resp.text}")
 
         users = resp.json().get("value", [])
         if not users:
-            raise NoGUIDException(f"[GUID‑lookup] No user matches '{upn_or_mail}'")
+            raise NoGUIDException(f"[GUID‑lookup] No user matches '{identifier}'")
 
         return users[0]["id"]
 
