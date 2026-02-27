@@ -53,8 +53,8 @@ jobs:
           fi
           
           echo "Building analyzers matrix..."
-          all_analyzers=$(find analyzers -type f -name '*.json' -printf '%P\n' | \
-            grep -E "^($allowed_analyzers)/" | \
+          all_analyzers=$(find analyzers -maxdepth 2 -type f -name '*.json' -printf '%P\n' | \
+            grep -E "^($allowed_analyzers)/[^/]+\.json$" | \
             jq -R -s -c 'split("\n")[:-1] | map({directory: (split("/")[0]), path: .})')
 
           # Split analyzers into two groups: 1-256 and 257+
@@ -62,8 +62,8 @@ jobs:
           analyzers_matrix_b=$(echo "$all_analyzers" | jq -c '{include: .[256:]}')
 
           echo "Building responders matrix..."
-          responders_matrix=$(find responders -type f -name '*.json' -printf '%P\n' | \
-            grep -E "^($allowed_responders)/" | \
+          responders_matrix=$(find responders -maxdepth 2 -type f -name '*.json' -printf '%P\n' | \
+            grep -E "^($allowed_responders)/[^/]+\.json$" | \
             jq -R -s -c 'split("\n")[:-1] | map({directory: (split("/")[0]), path: .}) | {include: .}')
 
           echo "Generated analyzers matrix A (1-256): $analyzers_matrix_a"

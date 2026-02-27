@@ -18,6 +18,24 @@ from cortexutils.analyzer import Analyzer
 # TODO: Optional: add a flavor: with image (the other one gives all http links found in the message, can be run as a second analysis. Manage PAP/TLP, use at your own risk)
 
 
+IP_REGEX = re.compile(
+    r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"
+)
+EMAIL_REGEX = re.compile(
+    r"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b"
+)
+
+
+def extract_ips_from_text(text):
+    """Extract valid IPv4 addresses from a text string."""
+    return IP_REGEX.findall(text or "")
+
+
+def extract_emails_from_text(text):
+    """Extract email addresses from a text string."""
+    return EMAIL_REGEX.findall(text or "")
+
+
 class EmlParserAnalyzer(Analyzer):
     def __init__(self):
         Analyzer.__init__(self)
@@ -64,8 +82,8 @@ class EmlParserAnalyzer(Analyzer):
         # Get values
         if "attachments" in raw:
             value_attachments = len(raw["attachments"])
-        # if 'url' in raw.get('iocs'):
-        # value_urls = len(raw.get('iocs').get('url'))
+        if "iocs" in raw and "url" in raw.get("iocs", {}):
+            value_urls = len(raw["iocs"]["url"])
 
         # Build summary
         taxonomies.append(
@@ -79,7 +97,11 @@ class EmlParserAnalyzer(Analyzer):
         return {"taxonomies": taxonomies}
 
     def artifacts(self, raw):
+        if not self.auto_extract:
+            return []
+
         artifacts = []
+        seen = set()
         urls = raw.get("iocs").get("url")
         ip = raw.get("iocs").get("ip")
         domains = raw.get("iocs").get("domain")
@@ -88,53 +110,87 @@ class EmlParserAnalyzer(Analyzer):
 
         if urls:
             for u in urls:
-                artifacts.append(
-                    self.build_artifact(
-                        "url", str(u["data"]), tags=u["tag"] + ["autoImport:true"]
+                key = ("url", str(u["data"]))
+                if key not in seen:
+                    seen.add(key)
+                    artifacts.append(
+                        self.build_artifact(
+                            "url", str(u["data"]), tags=u["tag"] + ["autoImport:true"]
+                        )
                     )
-                )
         if ip:
             for i in ip:
-                artifacts.append(
-                    self.build_artifact("ip", str(i["data"]), tags=i["tag"])
-                )
+                key = ("ip", str(i["data"]))
+                if key not in seen:
+                    seen.add(key)
+                    artifacts.append(
+                        self.build_artifact(
+                            "ip", str(i["data"]), tags=i["tag"] + ["autoImport:true"]
+                        )
+                    )
         if mail_addresses:
             for e in mail_addresses:
-                artifacts.append(
-                    self.build_artifact(
-                        "mail", str(e["data"]), tags=e["tag"] + ["autoImport:true"]
+                key = ("mail", str(e["data"]))
+                if key not in seen:
+                    seen.add(key)
+                    artifacts.append(
+                        self.build_artifact(
+                            "mail", str(e["data"]), tags=e["tag"] + ["autoImport:true"]
+                        )
                     )
-                )
         if domains:
             for d in domains:
-                artifacts.append(
-                    self.build_artifact("domain", str(d["data"]), tags=d["tag"])
-                )
+                key = ("domain", str(d["data"]))
+                if key not in seen:
+                    seen.add(key)
+                    artifacts.append(
+                        self.build_artifact("domain", str(d["data"]), tags=d["tag"])
+                    )
         if hashes:
             for h in hashes:
-                artifacts.append(
-                    self.build_artifact(
-                        "hash",
-                        str(h["hash"]),
-                        tags=["body:attachment", "autoImport:true"] + h["tag"],
+                hash_key = ("hash", str(h["hash"]))
+                if hash_key not in seen:
+                    seen.add(hash_key)
+                    artifacts.append(
+                        self.build_artifact(
+                            "hash",
+                            str(h["hash"]),
+                            tags=["body:attachment", "autoImport:true"] + h["tag"],
+                        )
                     )
-                )
-                artifacts.append(
-                    self.build_artifact(
-                        "filename",
-                        str(h["filename"]),
-                        tags=["body:attachment", "autoImport:true"] + h["tag"],
+                fname_key = ("filename", str(h["filename"]))
+                if fname_key not in seen:
+                    seen.add(fname_key)
+                    artifacts.append(
+                        self.build_artifact(
+                            "filename",
+                            str(h["filename"]),
+                            tags=["body:attachment", "autoImport:true"] + h["tag"],
+                        )
                     )
-                )
                 filepath = os.path.join(self.job_directory, "output", h.get("filename"))
-                artifacts.append(
-                    self.build_artifact(
-                        "file",
-                        filepath,
-                        tags=["body:attachment", "autoImport:true"] + h["tag"],
+                file_key = ("file", filepath)
+                if file_key not in seen:
+                    seen.add(file_key)
+                    artifacts.append(
+                        self.build_artifact(
+                            "file",
+                            filepath,
+                            tags=["body:attachment", "autoImport:true"] + h["tag"],
+                        )
                     )
-                )
         return artifacts
+
+
+def _add_ioc(ioc_list, data, tags):
+    """Add IOC to list, merging tags if the same data value already exists."""
+    for existing in ioc_list:
+        if existing["data"] == data:
+            for tag in tags:
+                if tag not in existing["tag"]:
+                    existing["tag"].append(tag)
+            return
+    ioc_list.append({"data": data, "tag": list(tags)})
 
 
 def parseEml(filepath, job_directory, wkhtmltoimage, sanitized_rendering):
@@ -207,12 +263,24 @@ def parseEml(filepath, job_directory, wkhtmltoimage, sanitized_rendering):
                     b.get("content"), "html.parser"
                 ).prettify()
                 for url in ep.get_uri_ondata(b.get("content")):
-                    iocs["url"].append({"data": url, "tag": ["body:text/plain"]})
+                    _add_ioc(iocs["url"], url, ["body:text/plain", "content-ioc"])
+                for ip in extract_ips_from_text(b.get("content")):
+                    _add_ioc(iocs["ip"], ip, ["body:text/plain", "content-ioc"])
+                for email in extract_emails_from_text(b.get("content")):
+                    _add_ioc(iocs["email"], email, ["body:text/plain", "content-ioc"])
 
             ## text/html
             elif b.get("content_type") == "text/html":
                 for url in ep.get_uri_ondata(b.get("content")):
-                    iocs["url"].append({"data": url, "tag": ["body:text/html"]})
+                    _add_ioc(iocs["url"], url, ["body:text/html", "content-ioc"])
+                # Extract IPs and emails from visible text (strip HTML tags)
+                visible_text = BeautifulSoup(
+                    b.get("content"), "html.parser"
+                ).get_text()
+                for ip in extract_ips_from_text(visible_text):
+                    _add_ioc(iocs["ip"], ip, ["body:text/html", "content-ioc"])
+                for email in extract_emails_from_text(visible_text):
+                    _add_ioc(iocs["email"], email, ["body:text/html", "content-ioc"])
 
                 ## Generate rendering image if option is enabled
                 if wkhtmltoimage.get("enable"):
@@ -282,9 +350,9 @@ def parseEml(filepath, job_directory, wkhtmltoimage, sanitized_rendering):
     ## Extract IOCs
     ##
     for ip in decoded_email.get("header").get("received_ip", []):
-        iocs["ip"].append({"data": ip, "tag": ["header:Received"]})
+        _add_ioc(iocs["ip"], ip, ["header:Received", "mail-relay"])
     for domain in decoded_email.get("header").get("received_domain", []):
-        iocs["domain"].append({"data": domain, "tag": ["header:Received"]})
+        _add_ioc(iocs["domain"], domain, ["header:Received", "mail-relay"])
     ### Email
     for field in [
         "cc",
@@ -294,14 +362,16 @@ def parseEml(filepath, job_directory, wkhtmltoimage, sanitized_rendering):
     ]:
         for email in decoded_email.get("header").get(field, []):
             if field == "delivered_to":
-                iocs["email"].append({"data": email, "tag": ["header:To"]})
+                _add_ioc(iocs["email"], email, ["header:To", "envelope"])
             else:
-                iocs["email"].append(
-                    {"data": email, "tag": ["header:{}".format(field.capitalize())]}
-                )
-    iocs["email"].append(
-        {"data": decoded_email.get("header").get("from", ""), "tag": ["header:From"]}
-    )
+                _add_ioc(iocs["email"], email, ["header:{}".format(field.capitalize()), "envelope"])
+    from_addr = decoded_email.get("header").get("from", "")
+    if from_addr:
+        _add_ioc(iocs["email"], from_addr, ["header:From", "envelope"])
+    ### Reply-To
+    for reply_to in decoded_email.get("header").get("header").get("reply-to", []):
+        for addr in extract_emails_from_text(reply_to):
+            _add_ioc(iocs["email"], addr, ["header:Reply-To", "envelope"])
 
     result["iocs"] = iocs
 
