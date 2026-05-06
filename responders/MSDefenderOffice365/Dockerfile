@@ -40,6 +40,10 @@ RUN ln -s /opt/microsoft/powershell/7/pwsh /usr/bin/pwsh
 
 WORKDIR /worker
 
+# Install PowerShell modules required by the scripts
+COPY install_deps.ps1 MSDefenderOffice365/
+RUN pwsh -File MSDefenderOffice365/install_deps.ps1
+
 # Copy the requirements for MSDefenderOffice365 and install them
 COPY requirements.txt MSDefenderOffice365/
 RUN pip3 install --no-cache-dir -r MSDefenderOffice365/requirements.txt
