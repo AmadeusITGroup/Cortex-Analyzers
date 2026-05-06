@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.8.2](https://github.com/TheHive-Project/Cortex-Analyzers/tree/3.8.2) (2026-04-14)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex-Analyzers/compare/3.8.1...3.8.2)
+
+**Merged pull requests:**
+
+- OpenCTI v6 Analyzers [\#1447](https://github.com/TheHive-Project/Cortex-Analyzers/pull/1447) ([nusantara-self](https://github.com/nusantara-self))
+
 ## [3.8.1](https://github.com/TheHive-Project/Cortex-Analyzers/tree/3.8.1) (2026-04-10)
 
 [Full Changelog](https://github.com/TheHive-Project/Cortex-Analyzers/compare/3.8.0...3.8.1)
