@@ -97,10 +97,12 @@ class ClusterHawkAnalyzer(Analyzer):
                 url, headers=self.headers, json=payload, timeout=30
             )
 
-            if response.status_code == 200:
+            if response.status_code in (200, 202):
                 result = response.json()
                 if result.get("success"):
-                    job_id = result.get("job_id")
+                    job_id = result.get("job_id") or result.get("data", {}).get(
+                        "job_id"
+                    )
                     self.info(f"Prediction job submitted successfully: {job_id}")
                     return job_id
                 else:
@@ -129,7 +131,7 @@ class ClusterHawkAnalyzer(Analyzer):
         start_time = time.time()
         max_wait = self.timeout * 60
 
-        self.info(f"Monitoring job {job_id} (timeout: {max_wait}m)")
+        self.info(f"Monitoring job {job_id} (timeout: {self.timeout}m)")
 
         while time.time() - start_time < max_wait:
             try:
@@ -139,9 +141,14 @@ class ClusterHawkAnalyzer(Analyzer):
                 if response.status_code == 200:
                     status_data = response.json()
 
+                    if isinstance(status_data, dict) and isinstance(
+                        status_data.get("data"), dict
+                    ):
+                        status_data = status_data["data"]
+
                     if isinstance(status_data, dict):
                         status = status_data.get("status", "unknown").lower()
-                        progress = status_data.get("progress", 0)
+                        progress = status_data.get("progress", 0) or 0
                     else:
                         status = str(status_data).lower()
                         progress = 0
@@ -337,7 +344,11 @@ class ClusterHawkAnalyzer(Analyzer):
                     "model_used": self.model_name,
                     "job_id": results.get("job_id", "unknown"),
                     "has_cluster_descriptions": has_cluster_descriptions,
-                    "is_prebuilt_model": self.model_name.upper().startswith("CHAWKR_"),
+                    "is_prebuilt_model": bool(
+                        results.get("results", {})
+                        .get("model_info", {})
+                        .get("is_prebuilt")
+                    ),
                     "kind_distribution": kind_distribution,
                 },
                 "cluster_summary": cluster_summary,
@@ -373,23 +384,26 @@ class ClusterHawkAnalyzer(Analyzer):
         for p in preds:
             kind = p.get("kind") or "unknown"
             level = self._KIND_TO_LEVEL.get(kind, "info")
-
-            desc = p.get("cluster_description")
-            if not desc:
-                desc = (
-                    kind.replace("_", " ").title() if kind != "unknown" else "Unknown"
-                )
-
+            cluster = p.get("cluster")
             confidence = p.get("confidence")
-            if isinstance(confidence, (int, float)):
-                value = f"{float(confidence):.3f}"
+
+            if cluster is not None:
+                if kind == "confident_match":
+                    predicate = "Cluster"
+                else:
+                    predicate = f"Cluster ({kind.replace('_', ' ')})"
+                if isinstance(confidence, (int, float)):
+                    value = f"{cluster} ({float(confidence):.2f})"
+                else:
+                    value = str(cluster)
             else:
-                value = "n/a"
+                predicate = "Kind"
+                value = kind.replace("_", " ")
 
             tx.append(
                 {
                     "namespace": "Clusterhawk",
-                    "predicate": str(desc),
+                    "predicate": predicate,
                     "value": value,
                     "level": level,
                 }

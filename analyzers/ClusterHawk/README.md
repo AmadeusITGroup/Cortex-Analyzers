@@ -230,16 +230,16 @@ For prebuilt models, additional fields are included:
 
 ### Cortex Taxonomy Mapping
 
-The analyzer surfaces each prediction as one Cortex taxonomy row under the `Clusterhawk` namespace. The taxonomy `level` is mapped from `kind`:
+The analyzer surfaces each prediction as one Cortex taxonomy row under the `Clusterhawk` namespace. The `level` is mapped from `kind`, and the `predicate` / `value` carry the cluster id and confidence when available:
 
-| kind                  | Taxonomy level | Cortex tile colour                               |
-| --------------------- | -------------- | ------------------------------------------------ |
-| `confident_match`     | `malicious`    | red — actionable                                 |
-| `ambiguous_split`     | `suspicious`   | orange — review candidate set                    |
-| `ambiguous_diffuse`   | `suspicious`   | orange — soft-trust attribution                  |
-| `out_of_distribution` | `info`         | grey — no cluster match, behavioural triage only |
+| kind                  | predicate                     | value                 | level        | Cortex tile colour                               |
+| --------------------- | ----------------------------- | --------------------- | ------------ | ------------------------------------------------ |
+| `confident_match`     | `Cluster`                     | `<id> (<confidence>)` | `malicious`  | red — actionable                                 |
+| `ambiguous_split`     | `Cluster (ambiguous split)`   | `<id> (<confidence>)` | `suspicious` | orange — review candidate set                    |
+| `ambiguous_diffuse`   | `Cluster (ambiguous diffuse)` | `<id> (<confidence>)` | `suspicious` | orange — soft-trust attribution                  |
+| `out_of_distribution` | `Kind`                        | `out of distribution` | `info`       | grey — no cluster match, behavioural triage only |
 
-For OOD rows the taxonomy `value` is `n/a` (since `confidence` is `null` by contract), not `0.000` — the latter would be misleading.
+Out-of-distribution rows omit the cluster id from the tile (since `predicted_cluster` and `confidence` are `null` by contract) and instead surface the trust-gate label as the value, so the tile is never misleading about a cluster that wasn't actually assigned.
 
 ## Support
 
