@@ -29,6 +29,32 @@
                 <th>Cluster Descriptions</th>
                 <td><span class="label label-success">Available</span></td>
               </tr>
+              <tr ng-if="content.summary.kind_distribution">
+                <th>
+                  Trust Bands
+                  <span class="kh-subtle" title="Read the prediction kind first — it is the trust gate. Confident matches are actionable; ambiguous rows need candidate-set review; out-of-distribution rows have null cluster id by design and should not be acted on as a cluster match.">
+                    (kind)
+                  </span>
+                </th>
+                <td>
+                  <span class="label label-success label-space"
+                        ng-if="content.summary.kind_distribution.confident_match">
+                    Confident: {{ content.summary.kind_distribution.confident_match }}
+                  </span>
+                  <span class="label label-warning label-space"
+                        ng-if="content.summary.kind_distribution.ambiguous_split">
+                    Ambiguous (split): {{ content.summary.kind_distribution.ambiguous_split }}
+                  </span>
+                  <span class="label label-warning label-space"
+                        ng-if="content.summary.kind_distribution.ambiguous_diffuse">
+                    Ambiguous (diffuse): {{ content.summary.kind_distribution.ambiguous_diffuse }}
+                  </span>
+                  <span class="label label-default label-space"
+                        ng-if="content.summary.kind_distribution.out_of_distribution">
+                    Out of distribution: {{ content.summary.kind_distribution.out_of_distribution }}
+                  </span>
+                </td>
+              </tr>
             </table>
           </div>
         </div>
@@ -40,7 +66,11 @@
         <div class="kh-panel" ng-repeat="(name, info) in content.cluster_summary">
           <div class="kh-panel-hd">
             <strong>{{ name }}</strong>
-            <span class="label label-default label-space" ng-if="info.description">{{ info.description }}</span>
+            <span class="label label-default label-space" ng-if="info.is_ood"
+                  title="Out-of-distribution rows have no fingerprint match — the cluster id was nulled by the contract layer. Investigate via behavioral evidence rather than relying on a cluster attribution.">
+              No fingerprint match
+            </span>
+            <span class="label label-default label-space" ng-if="info.description && !info.is_ood">{{ info.description }}</span>
           </div>
           <div class="kh-panel-bd">
             <div class="kh-note" ng-if="info.description || info.indicators">
@@ -55,7 +85,10 @@
               </tr>
               <tr>
                 <th>Average Confidence</th>
-                <td>{{ info.avg_confidence | number:3 }}</td>
+                <td>
+                  <span ng-if="info.avg_confidence != null">{{ info.avg_confidence | number:3 }}</span>
+                  <span ng-if="info.avg_confidence == null" class="kh-subtle"><em>n/a</em></span>
+                </td>
               </tr>
               <tr>
                 <th>IP Addresses</th>
@@ -76,35 +109,81 @@
               <tr>
                 <th>IP</th>
                 <th>Cluster</th>
+                <th>Kind</th>
                 <th>Label</th>
                 <th>Confidence</th>
-                <th>Uncertainty</th>
-                <th>Model Variance</th>
+                <th title="exp(entropy) — interpretable as the candidates-worth of probability mass">Effective N</th>
               </tr>
             </thead>
             <tbody>
               <tr ng-repeat-start="p in content.predictions track by $index">
                 <td><span class="kh-chip">{{ p.ip }}</span></td>
                 <td>
+                  <span class="label label-default" ng-if="p.cluster === null || p.cluster === undefined">
+                    No match
+                  </span>
                   <span class="label"
+                        ng-if="p.cluster !== null && p.cluster !== undefined"
                         ng-class="{
                           'label-default': (p.cluster == -1),
-                          'label-warning': (p.cluster != -1 && p.confidence < 0.95),
-                          'label-danger':  (p.cluster != -1 && p.confidence >= 0.95)
+                          'label-warning': (p.cluster != -1 && p.confidence != null && p.confidence < 0.95),
+                          'label-danger':  (p.cluster != -1 && p.confidence != null && p.confidence >= 0.95),
+                          'label-info':    (p.cluster != -1 && p.confidence == null)
                         }">{{ p.cluster }}</span>
                   <div class="kh-subtle" ng-if="p.cluster_description"><em>{{ p.cluster_description }}</em></div>
+                </td>
+                <td>
+                  <!-- Trust gate. Read this column first when triaging. -->
+                  <span class="label label-success"
+                        ng-if="p.kind == 'confident_match'"
+                        title="Strong fingerprint match — actionable subset for SOAR/SIEM correlation rules.">
+                    Confident
+                  </span>
+                  <span class="label label-warning"
+                        ng-if="p.kind == 'ambiguous_split'"
+                        title="Close two-way / few-way tie between candidates. Investigate the candidate set as a unit.">
+                    Ambiguous (split)
+                  </span>
+                  <span class="label label-warning"
+                        ng-if="p.kind == 'ambiguous_diffuse'"
+                        title="Top-1 leans, but probability mass is spread thin across many candidates. Treat with softer trust.">
+                    Ambiguous (diffuse)
+                  </span>
+                  <span class="label label-default"
+                        ng-if="p.kind == 'out_of_distribution'"
+                        title="No fingerprint match — the IP does not resemble any trained cluster. Investigate via behavioral evidence rather than the cluster id.">
+                    Out of distribution
+                  </span>
+                  <span class="kh-subtle" ng-if="!p.kind">-</span>
                 </td>
                 <td>
                   <span ng-if="p.label">{{ p.label }}</span>
                   <span ng-if="!p.label" class="kh-subtle">-</span>
                 </td>
-                <td>{{ p.confidence | number:3 }}</td>
-                <td>{{ p.uncertainty | number:3 }}</td>
-                <td>{{ p.model_variance | number:4 }}</td>
+                <td>
+                  <span ng-if="p.confidence != null">{{ p.confidence | number:3 }}</span>
+                  <span ng-if="p.confidence == null" class="kh-subtle"><em>n/a</em></span>
+                </td>
+                <td>
+                  <span ng-if="p.effective_n != null">{{ p.effective_n | number:2 }}</span>
+                  <span ng-if="p.effective_n == null" class="kh-subtle">-</span>
+                </td>
               </tr>
-              <tr ng-repeat-end ng-if="p.cluster_indicators">
+              <tr ng-repeat-end
+                  ng-if="p.cluster_indicators || (p.candidates && p.candidates.length > 1)">
                 <td colspan="6" class="kh-subtle" style="background:#f9f9f9">
-                  <strong>Indicators:</strong> {{ p.cluster_indicators }}
+                  <div ng-if="p.cluster_indicators" style="margin-bottom:4px">
+                    <strong>Indicators:</strong> {{ p.cluster_indicators }}
+                  </div>
+                  <div ng-if="p.candidates && p.candidates.length > 1" style="margin-bottom:4px">
+                    <strong>Candidate clusters</strong>
+                    <span ng-if="p.top1_minus_top2 != null">
+                      &mdash; top1 − top2 {{ (p.top1_minus_top2 * 100) | number:1 }}%
+                    </span>:
+                    <span class="kh-chip" ng-repeat="c in p.candidates track by $index">
+                      Cluster {{ c.cluster_id }} · {{ (c.confidence * 100) | number:1 }}%
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>
