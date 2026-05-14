@@ -5,10 +5,12 @@
   "url": "https://github.com/TheHive-Project/Cortex-Analyzers",
   "license": "AGPL-V3",
   "description": "Run URL analysis using Android VM",
-  "dataTypeList": ["url"],
+  "dataTypeList": [
+    "url"
+  ],
   "command": "AnyRun/anyrun_analyzer.py",
   "baseConfig": "AnyRun",
-   "config": {
+  "config": {
     "os": "android",
     "analysis_type": "url"
   },
@@ -44,7 +46,7 @@
       "required": true,
       "defaultValue": true
     },
-      {
+    {
       "name": "get_iocs",
       "description": "Attach Analysis IOCs to the case as observables",
       "type": "boolean",
@@ -78,7 +80,7 @@
     {
       "name": "opt_network_connect",
       "description": "Network connection state",
-      "type": "Boolean",
+      "type": "boolean",
       "multi": false,
       "required": false,
       "defaultValue": true
@@ -86,7 +88,7 @@
     {
       "name": "opt_network_fakenet",
       "description": "FakeNet feature status",
-      "type": "Boolean",
+      "type": "boolean",
       "multi": false,
       "required": false,
       "defaultValue": false
@@ -94,7 +96,7 @@
     {
       "name": "opt_network_tor",
       "description": "TOR using",
-      "type": "Boolean",
+      "type": "boolean",
       "multi": false,
       "required": false,
       "defaultValue": false
@@ -110,7 +112,7 @@
     {
       "name": "opt_network_mitm",
       "description": "HTTPS MITM proxy option",
-      "type": "Boolean",
+      "type": "boolean",
       "multi": false,
       "required": false,
       "defaultValue": false
@@ -118,7 +120,7 @@
     {
       "name": "opt_network_residential_proxy",
       "description": "Residential Proxy option",
-      "type": "Boolean",
+      "type": "boolean",
       "multi": false,
       "required": false,
       "defaultValue": false
@@ -142,7 +144,7 @@
     {
       "name": "opt_timeout",
       "description": "Timeout option, size range 10-660",
-      "type": "Number",
+      "type": "number",
       "multi": false,
       "required": false,
       "defaultValue": "120"
@@ -167,13 +169,13 @@
   "free_subscription": false,
   "service_homepage": "https://any.run/",
   "service_logo": {
-      "path": "assets/anyrun.png",
-      "caption": "AnyRun logo"
+    "path": "assets/anyrun.png",
+    "caption": "AnyRun logo"
   },
   "screenshots": [
-      {
-          "path": "assets/long_report.png",
-          "caption": "AnyRun: Long report template"
-      }
+    {
+      "path": "assets/long_report.png",
+      "caption": "AnyRun: Long report template"
+    }
   ]
 }
