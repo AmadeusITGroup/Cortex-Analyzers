@@ -155,7 +155,7 @@
       "type": "number",
       "multi": false,
       "required": false,
-      "defaultValue": "120"
+      "defaultValue": 120
     },
     {
       "name": "opt_auto_delete_after",
